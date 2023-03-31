@@ -5,9 +5,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.job4j.auth.model.Person;
-import ru.job4j.auth.repository.PersonRepository;
+import ru.job4j.auth.service.PersonService;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * @author: Egor Bekhterev
@@ -19,7 +20,7 @@ import java.util.List;
 @AllArgsConstructor
 public class PersonController {
 
-    private final PersonRepository persons;
+    private final PersonService persons;
 
     @GetMapping("/")
     public List<Person> findAll() {
@@ -45,15 +46,15 @@ public class PersonController {
 
     @PutMapping("/")
     public ResponseEntity<Void> update(@RequestBody Person person) {
-        this.persons.save(person);
-        return ResponseEntity.ok().build();
+        var rsl = this.persons.update(person);
+        return new ResponseEntity<>(
+                rsl ? HttpStatus.OK : HttpStatus.NOT_FOUND);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable int id) {
-        Person person = new Person();
-        person.setId(id);
-        this.persons.delete(person);
-        return ResponseEntity.ok().build();
+        var rsl = this.persons.delete(id);
+        return new ResponseEntity<>(
+                rsl ? HttpStatus.OK : HttpStatus.NOT_FOUND);
     }
 }
