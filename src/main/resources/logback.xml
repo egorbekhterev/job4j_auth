@@ -1,0 +1,24 @@
+<configuration>
+
+    <property name="HOME_LOG" value="logs/app.log"/>
+
+    <appender name="file" class="ch.qos.logback.core.FileAppender">
+        <file>${HOME_LOG}</file>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <logger name="debug" level="debug" additivity="false">
+        <appender-ref ref="file"/>
+    </logger>
+
+    <root level="error">
+        <appender-ref ref="file"/>
+    </root>
+
+    <logger name="info" level="info" additivity="false">
+        <appender-ref ref="file"/>
+    </logger>
+
+</configuration>

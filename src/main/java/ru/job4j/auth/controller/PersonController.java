@@ -1,6 +1,8 @@
 package ru.job4j.auth.controller;
 
 import lombok.AllArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -8,7 +10,6 @@ import ru.job4j.auth.model.Person;
 import ru.job4j.auth.service.PersonService;
 
 import java.util.List;
-import java.util.Optional;
 
 /**
  * @author: Egor Bekhterev
@@ -21,6 +22,8 @@ import java.util.Optional;
 public class PersonController {
 
     private final PersonService persons;
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(PersonController.class);
 
     @GetMapping("/")
     public List<Person> findAll() {
