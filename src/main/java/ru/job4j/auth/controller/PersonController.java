@@ -1,10 +1,9 @@
 package ru.job4j.auth.controller;
 
 import lombok.AllArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import ru.job4j.auth.model.Person;
 import ru.job4j.auth.service.PersonService;
@@ -23,7 +22,7 @@ public class PersonController {
 
     private final PersonService persons;
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(PersonController.class);
+    private final BCryptPasswordEncoder encoder;
 
     @GetMapping("/")
     public List<Person> findAll() {
@@ -59,5 +58,11 @@ public class PersonController {
         var rsl = this.persons.delete(id);
         return new ResponseEntity<>(
                 rsl ? HttpStatus.OK : HttpStatus.NOT_FOUND);
+    }
+
+    @PostMapping("/sign-up")
+    public void signUp(@RequestBody Person person) {
+        person.setPassword(encoder.encode(person.getPassword()));
+        persons.save(person);
     }
 }

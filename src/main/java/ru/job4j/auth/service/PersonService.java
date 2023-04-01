@@ -1,8 +1,6 @@
 package ru.job4j.auth.service;
 
 import lombok.AllArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import ru.job4j.auth.model.Person;
 import ru.job4j.auth.repository.PersonRepository;
@@ -47,5 +45,9 @@ public class PersonService {
             return true;
         }
         return false;
+    }
+
+    public Optional<Person> findByLogin(String login) {
+        return personRepository.findByLogin(login);
     }
 }

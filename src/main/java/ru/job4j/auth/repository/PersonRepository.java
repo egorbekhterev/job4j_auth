@@ -4,6 +4,7 @@ import org.springframework.data.repository.CrudRepository;
 import ru.job4j.auth.model.Person;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * @author: Egor Bekhterev
@@ -13,4 +14,6 @@ import java.util.List;
 public interface PersonRepository extends CrudRepository<Person, Integer> {
 
     List<Person> findAll();
+
+    Optional<Person> findByLogin(String login);
 }
