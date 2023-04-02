@@ -12,11 +12,14 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import ru.job4j.auth.handler.GlobalExceptionHandler;
 import ru.job4j.auth.model.Person;
+import ru.job4j.auth.model.PersonDTO;
 import ru.job4j.auth.service.PersonService;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
@@ -123,5 +126,66 @@ public class PersonController {
     @GetMapping("/pomDownload")
     public byte[] pomDownload() throws IOException {
         return Files.readAllBytes(Path.of("./pom.xml"));
+    }
+
+    /**
+     * Метод служит для обновления поля password объекта {@link Person}. Используется Data Transfer Object.
+     * @param personDTO DTO объект, содержащий новую информацию о {@link Person}.
+     * @param id - идентификатор объекта.
+     * @return содержит информацию о результате операции и измененном объекте Person.
+     */
+    @PatchMapping("/patchDTO/{id}")
+    public ResponseEntity<Person> patchDTO(@RequestBody PersonDTO personDTO, @PathVariable int id) {
+        var person = persons.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        person.setPassword(personDTO.getPassword());
+        var rsl = persons.update(person);
+        return new ResponseEntity<>(person, rsl ? HttpStatus.OK : HttpStatus.BAD_REQUEST);
+    }
+
+    /**
+     * Метод служит для обновления ненулевых полей объекта {@link Person}. Использует рефлексию.
+     * @param person Объект типа Person, содержащий значения полей для обновления текущего объекта.
+     * @return ResponseEntity с объектом типа Person и статусом OK, если обновление выполнено успешно,
+     * или BAD_REQUEST в противном случае.
+     * @throws InvocationTargetException если вызов метода завершился исключением.
+     * @throws IllegalAccessException если метод не может быть вызван.
+     */
+    @PatchMapping("/patch")
+    public ResponseEntity<Person> patch(@RequestBody Person person) throws InvocationTargetException, IllegalAccessException {
+        var currentPerson = persons.findById(person.getId());
+        if (currentPerson.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    "Person is not found. Please, check the identificator.");
+        }
+
+        /* Через рефлексию получаем массив методов объекта Person. Далее собираем мапу из геттеров и сеттеров.*/
+        var methods = currentPerson.get().getClass().getDeclaredMethods();
+        var namePerMethod = new HashMap<String, Method>();
+        for (var method : methods) {
+            var name = method.getName();
+            if (name.startsWith("get") || name.startsWith("set")) {
+                namePerMethod.put(name, method);
+            }
+        }
+
+        for (var name : namePerMethod.keySet()) {
+            if (name.startsWith("get")) {
+                var getMethod = namePerMethod.get(name);
+                var setMethod = namePerMethod.get(name.replace("get", "set"));
+                if (setMethod == null) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                            "Impossible invoke set method from object : " + currentPerson
+                                    + ", Check set and get pairs.");
+                }
+                /* Получаем новые значения для полей объекта, если не null - обновляем поле currentPerson.*/
+                var newValue = getMethod.invoke(person);
+                if (newValue != null) {
+                    setMethod.invoke(currentPerson.get(), newValue);
+                }
+            }
+        }
+        var rsl = persons.update(currentPerson.get());
+        return new ResponseEntity<>(person, rsl ? HttpStatus.OK : HttpStatus.BAD_REQUEST);
     }
 }
