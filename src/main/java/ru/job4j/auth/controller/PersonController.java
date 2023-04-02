@@ -8,15 +8,18 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import ru.job4j.auth.handler.GlobalExceptionHandler;
 import ru.job4j.auth.model.Person;
 import ru.job4j.auth.model.PersonDTO;
 import ru.job4j.auth.service.PersonService;
+import ru.job4j.auth.validation.Operation;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.validation.Valid;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -84,7 +87,7 @@ public class PersonController {
     }
 
     @PostMapping("/")
-    public ResponseEntity<Person> create(@RequestBody Person person) {
+    public ResponseEntity<Person> create(@Validated(Operation.OnCreate.class) @RequestBody Person person) {
         if (person.getLogin() == null || person.getPassword() == null) {
             throw new NullPointerException("Username and password mustn't be empty");
         }
@@ -98,7 +101,7 @@ public class PersonController {
     }
 
     @PutMapping("/")
-    public ResponseEntity<Void> update(@RequestBody Person person) {
+    public ResponseEntity<Void> update(@Validated(Operation.OnUpdate.class) @RequestBody Person person) {
         var rsl = this.persons.update(person);
         return new ResponseEntity<>(
                 rsl ? HttpStatus.OK : HttpStatus.NOT_FOUND);
@@ -112,7 +115,7 @@ public class PersonController {
     }
 
     @PostMapping("/sign-up")
-    public void signUp(@RequestBody Person person) {
+    public void signUp(@Validated(Operation.OnCreate.class) @RequestBody Person person) {
         if (person.getLogin() == null || person.getPassword() == null) {
             throw new NullPointerException("Username and password mustn't be empty");
         }
@@ -135,7 +138,7 @@ public class PersonController {
      * @return содержит информацию о результате операции и измененном объекте Person.
      */
     @PatchMapping("/patchDTO/{id}")
-    public ResponseEntity<Person> patchDTO(@RequestBody PersonDTO personDTO, @PathVariable int id) {
+    public ResponseEntity<Person> patchDTO(@Valid @RequestBody PersonDTO personDTO, @PathVariable int id) {
         var person = persons.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         person.setPassword(personDTO.getPassword());
@@ -152,7 +155,7 @@ public class PersonController {
      * @throws IllegalAccessException если метод не может быть вызван.
      */
     @PatchMapping("/patch")
-    public ResponseEntity<Person> patch(@RequestBody Person person) throws InvocationTargetException, IllegalAccessException {
+    public ResponseEntity<Person> patch(@Validated(Operation.OnUpdate.class) @RequestBody Person person) throws InvocationTargetException, IllegalAccessException {
         var currentPerson = persons.findById(person.getId());
         if (currentPerson.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND,
