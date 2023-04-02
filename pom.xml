@@ -22,6 +22,12 @@
 	<dependencies>
 
 		<dependency>
+			<groupId>org.liquibase</groupId>
+			<artifactId>liquibase-core</artifactId>
+			<version>3.6.2</version>
+		</dependency>
+
+		<dependency>
 			<groupId>com.auth0</groupId>
 			<artifactId>java-jwt</artifactId>
 			<version>3.4.0</version>
@@ -78,7 +84,7 @@
 		<profile>
 			<id>test</id>
 			<properties>
-				<liquibase.config>db/liquibase_test.properties</liquibase.config>
+				<liquibase.config>src/main/resources/db/liquibase_test.properties</liquibase.config>
 			</properties>
 			<activation>
 				<activeByDefault>true</activeByDefault>
@@ -87,7 +93,7 @@
 		<profile>
 			<id>production</id>
 			<properties>
-				<liquibase.config>db/liquibase.properties</liquibase.config>
+				<liquibase.config>src/main/resources/db/liquibase.properties</liquibase.config>
 			</properties>
 		</profile>
 	</profiles>
